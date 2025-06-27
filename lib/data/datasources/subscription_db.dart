@@ -30,7 +30,11 @@ class SubscriptionDB {
         price REAL NOT NULL,
         billingCycle TEXT NOT NULL,
         category TEXT NOT NULL,
-        nextPayment TEXT NOT NULL
+        nextPayment TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        autoPay INTEGER NOT NULL DEFAULT 1,
+        notificationsEnabled INTEGER NOT NULL DEFAULT 0,
+        notificationsInterval TEXT DEFAULT NULL
       )
     ''');
   }

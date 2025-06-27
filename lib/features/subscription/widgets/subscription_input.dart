@@ -101,6 +101,7 @@ class _SubscriptionInputState extends State<SubscriptionInput> {
                     billingCycle: billingCycle,
                     category: category,
                     nextPayment: DateTime.parse(nextPayment),
+                    createdAt: DateTime.now(),
                   );
                   context.read<SubscriptionBloc>().add(
                     AddSubscription(subscription),
