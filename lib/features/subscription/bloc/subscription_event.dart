@@ -8,12 +8,11 @@ abstract class SubscriptionEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class FetchSubscriptions extends SubscriptionEvent {
-  final int page;
-  const FetchSubscriptions({this.page = 1});
+class LoadSubscriptions extends SubscriptionEvent {
+  const LoadSubscriptions();
 
   @override
-  List<Object?> get pops => [page];
+  List<Object?> get props => [];
 }
 
 class AddSubscription extends SubscriptionEvent {

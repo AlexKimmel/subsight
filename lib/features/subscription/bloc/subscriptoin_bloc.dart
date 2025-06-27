@@ -6,47 +6,11 @@ import 'subscription_state.dart';
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   final SubscriptionRepository repository;
 
-  int _currentPage = 1;
-  bool _hasReachedEnd = false;
-
   SubscriptionBloc(this.repository) : super(SubscriptionInitial()) {
-    on<FetchSubscriptions>(_onFetchSubscriptions);
     on<AddSubscription>(_onAddSubscription);
     on<RemoveSubscription>(_onRemoveSubscription);
     on<UpdateSubscription>(_onUpdateSubscription);
-  }
-
-  Future<void> _onFetchSubscriptions(
-    FetchSubscriptions event,
-    Emitter<SubscriptionState> emit,
-  ) async {
-    if (_hasReachedEnd && event.page != 1) return;
-
-    try {
-      if (event.page == 1) emit(SubscriptionLoading());
-
-      final newSubs = await repository.fetchFromHtmlApi(page: event.page);
-
-      if (newSubs.isEmpty) {
-        _hasReachedEnd = true;
-        emit(
-          SubscriptionLoaded(
-            (state as SubscriptionLoaded?)?.subscriptions ?? [],
-            hasReachedEnd: true,
-          ),
-        );
-      } else {
-        _currentPage = event.page;
-        final current = (state is SubscriptionLoaded)
-            ? (state as SubscriptionLoaded).subscriptions
-            : [];
-        emit(
-          SubscriptionLoaded([...current, ...newSubs], hasReachedEnd: false),
-        );
-      }
-    } catch (e) {
-      emit(SubscriptionError(e.toString()));
-    }
+    on<LoadSubscriptions>(_onLoadSubscriptions);
   }
 
   Future<void> _onAddSubscription(
@@ -54,7 +18,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     Emitter<SubscriptionState> emit,
   ) async {
     await repository.addToLocal(event.subscription);
-    add(FetchSubscriptions(page: 1));
+    add(LoadSubscriptions());
   }
 
   Future<void> _onRemoveSubscription(
@@ -62,7 +26,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     Emitter<SubscriptionState> emit,
   ) async {
     await repository.removeFromLocal(event.id);
-    add(FetchSubscriptions(page: 1));
+    add(LoadSubscriptions());
   }
 
   Future<void> _onUpdateSubscription(
@@ -70,6 +34,19 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     Emitter<SubscriptionState> emit,
   ) async {
     await repository.updateLocal(event.updated);
-    add(FetchSubscriptions(page: 1));
+    add(LoadSubscriptions());
+  }
+
+  Future<void> _onLoadSubscriptions(
+    LoadSubscriptions event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(SubscriptionLoading());
+    try {
+      final subs = await repository.getLocalSubscriptions();
+      emit(SubscriptionLoaded(subs, hasReachedEnd: true));
+    } catch (e) {
+      emit(SubscriptionError("Failed to load subscriptions: $e"));
+    }
   }
 }

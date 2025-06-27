@@ -47,13 +47,15 @@ class SubscriptionModel {
 
   factory SubscriptionModel.fromMap(Map<String, dynamic> map) {
     return SubscriptionModel(
-      id: map['id'] != null ? map['id'] as int : null,
+      id: map['id'] is int ? map['id'] : int.tryParse(map['id'].toString()),
       name: map['name'] as String,
       price: map['price'] as double,
       billingCycle: map['billingCycle'] as String,
       category: map['category'] as String,
       nextPayment: DateTime.fromMillisecondsSinceEpoch(
-        map['nextPayment'] as int,
+        map['nextPayment'] is int
+            ? map['nextPayment']
+            : int.tryParse(map['nextPayment'].toString()) ?? 0,
       ),
     );
   }
