@@ -36,18 +36,22 @@ class _SubscriptionListPageState extends State<SubscriptionListPage> {
       appBar: AppBar(title: const SelectableText("Subscriptions")),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showModalBottomSheet(
-            isScrollControlled: true,
-            enableDrag: true,
-            showDragHandle: true,
-            context: context,
-            builder: (_) {
-              return BlocProvider.value(
-                value: context.read<SubscriptionBloc>(),
-                child: const SubscriptionInput(),
-              );
-            },
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => SubscriptionInput()));
+
+          // showModalBottomSheet(
+          //   isScrollControlled: true,
+          //   enableDrag: true,
+          //   showDragHandle: true,
+          //   context: context,
+          //   builder: (_) {
+          //     return BlocProvider.value(
+          //       value: context.read<SubscriptionBloc>(),
+          //       child: const SubscriptionInput(),
+          //     );
+          //   },
+          // );
         },
         child: const Icon(Icons.add),
       ),

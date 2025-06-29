@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_iconpicker/Models/configuration.dart';
+import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:subsight/features/subscription/bloc/subscription_event.dart';
 import 'package:subsight/features/subscription/bloc/subscriptoin_bloc.dart';
 import 'package:subsight/features/subscription/models/subscription_model.dart';
 
 class SubscriptionInput extends StatefulWidget {
-  const SubscriptionInput({super.key});
+  const SubscriptionInput({super.key, this.subscriptionModel});
+
+  final SubscriptionModel? subscriptionModel;
 
   @override
   State<SubscriptionInput> createState() => _SubscriptionInputState();
@@ -18,6 +22,7 @@ class _SubscriptionInputState extends State<SubscriptionInput> {
   String billingCycle = 'Monthly';
   String nextPayment = '';
   String category = '';
+  Icon? icon = null;
 
   final List<String> billingOptions = [
     'Weekly',
@@ -28,97 +33,102 @@ class _SubscriptionInputState extends State<SubscriptionInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 16,
-        right: 16,
-        top: 16,
+    return Scaffold(
+      appBar: AppBar(
+        title: widget.subscriptionModel == null
+            ? Text('Add Subscription')
+            : Text('Edit ${widget.subscriptionModel?.name} subscription'),
       ),
-      child: Form(
-        key: _formKey,
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "Add Subscription",
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: const InputDecoration(labelText: "Name"),
-              onChanged: (value) => name = value,
-            ),
-            TextFormField(
-              decoration: const InputDecoration(labelText: "Price"),
-              keyboardType: TextInputType.number,
-              onChanged: (value) => price = double.tryParse(value) ?? 0.0,
-            ),
-            DropdownButtonFormField<String>(
-              value: billingCycle,
-              items: billingOptions
-                  .map(
-                    (option) =>
-                        DropdownMenuItem(value: option, child: Text(option)),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() {
-                billingCycle = value ?? 'Monthly';
-              }),
-              decoration: const InputDecoration(labelText: "Billing Cycle"),
-            ),
-            TextFormField(
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: "Next Payment Date",
-                hintText: nextPayment,
+            Container(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(120, 120),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        padding: const EdgeInsets.all(10),
+                      ),
+                      onPressed: () {
+                        showIconPicker(
+                          context,
+                          configuration: SinglePickerConfiguration(
+                            adaptiveDialog: false,
+                            showTooltips: true,
+                            iconPickerShape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                            iconPackModes: const [
+                              IconPack.material,
+                            ], //TODO: Create icon packs
+                            searchComparator:
+                                (String search, IconPickerIcon icon) =>
+                                    search.toLowerCase().contains(
+                                      icon.name
+                                          .replaceAll('_', ' ')
+                                          .toLowerCase(),
+                                    ) ||
+                                    icon.name.toLowerCase().contains(
+                                      search.toLowerCase(),
+                                    ),
+                          ),
+                        );
+                      },
+                      child: icon == null
+                          ? SizedBox(height: 40, width: 40)
+                          : Icon(icon!.icon, size: 40),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: GestureDetector(
+                      child: Text(
+                        "${widget.subscriptionModel?.price ?? 0} €",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return Dialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.0),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextField(
+                                  autofocus: true,
+                                  keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true,
+                                    signed: false,
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      price = double.tryParse(value) ?? 0.0;
+                                    });
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-              onTap: () async {
-                final pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now().add(const Duration(days: 30)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                );
-                if (pickedDate != null) {
-                  setState(() {
-                    nextPayment = pickedDate.toString();
-                  });
-                }
-              },
-            ),
-            TextFormField(
-              decoration: const InputDecoration(labelText: "Category"),
-              onChanged: (value) => category = value,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState?.validate() ?? false) {
-                  SubscriptionModel subscription = SubscriptionModel(
-                    name: name,
-                    price: price,
-                    billingCycle: billingCycle,
-                    category: category,
-                    nextPayment: DateTime.parse(nextPayment),
-                    createdAt: DateTime.now(),
-                  );
-                  context.read<SubscriptionBloc>().add(
-                    AddSubscription(subscription),
-                  );
-
-                  // Clear the form fields
-                  setState(() {
-                    name = '';
-                    price = 0.0;
-                    billingCycle = 'Monthly';
-                    nextPayment = '';
-                    category = '';
-                  });
-                }
-                Navigator.pop(context);
-              },
-              child: const Text("Add Subscription"),
             ),
           ],
         ),

@@ -93,7 +93,7 @@ class SubscriptionModel {
       nextPayment: nextPayment ?? this.nextPayment,
       createdAt: createdAt,
       notificationsInterval:
-          notificationsInterval ?? this.notificationsInterval,
+          notificationsInterval,
       autoPay: autoPay,
       notificationsEnabled: notificationsEnabled,
     );

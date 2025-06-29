@@ -40,17 +40,19 @@ class SubscriptionCard extends StatelessWidget {
 
         // Delay Snackbar until after Dismissible finishes
         Future.microtask(() {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("$name deleted"),
-              action: SnackBarAction(
-                label: "Undo",
-                onPressed: () {
-                  bloc.add(AddSubscription(subscriptionCopy));
-                },
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("$name deleted"),
+                action: SnackBarAction(
+                  label: "Undo",
+                  onPressed: () {
+                    bloc.add(AddSubscription(subscriptionCopy));
+                  },
+                ),
               ),
-            ),
-          );
+            );
+          }
         });
       },
     );
